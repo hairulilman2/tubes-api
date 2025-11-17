@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>absensi untad - Sistem Absensi</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="login-mode">
+    <!-- Login Screen -->
+    <div class="login-container" id="loginScreen">
+      <div class="header">
+        <svg width="80" height="80" viewBox="0 0 80 80" class="logo-img">
+          <circle cx="40" cy="40" r="40" fill="url(#gradient)" />
+          <text
+            x="40"
+            y="45"
+            text-anchor="middle"
+            fill="white"
+            font-family="Arial"
+            font-size="14"
+            font-weight="bold"
+          >
+            LOGO
+          </text>
+          <defs>
+            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color: #2c5e2e; stop-opacity: 1" />
+              <stop offset="100%" style="stop-color: #4a7c59; stop-opacity: 1" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1 class="title">ABSENSI</h1>
+        <p class="subtitle">Universitas</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">username..</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            placeholder="Masukkan username"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">password..</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Masukkan password"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="role">login sebagai:</label>
+          <select id="role" name="role">
+            <option value="mahasiswa">Mahasiswa</option>
+            <option value="dosen">Dosen</option>
+          </select>
+        </div>
+
+        <button type="submit" class="login-button">LOGIN</button>
+      </form>
+
+      <div id="loginResult" class="result"></div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="main-app" id="mainApp">
+      <div class="container">
+        <div class="app-header">
+          <button class="logout-btn" onclick="logout()">Logout</button>
+          <h1>📍 Sistem Absensi CERDAS UNTAD</h1>
+          <p>Berbasis Lokasi dengan AdonisJS & MongoDB Atlas</p>
+        </div>
+
+        <div class="content">
+          <div class="tabs">
+            <button class="tab" onclick="showTab('absen')" id="absenTab" style="display: none">
+              Absen
+            </button>
+            <button class="tab" onclick="showTab('admin')" id="adminTab" style="display: none">
+              Admin Panel
+            </button>
+
+          </div>
+
+          <!-- Absen Tab -->
+          <div id="absen" class="tab-content">
+            <h3>✅ Absensi Mahasiswa</h3>
+            <div class="location-info">
+              <p><strong>📍 Lokasi Anda:</strong></p>
+              <p id="currentLocation">Klik tombol untuk mendapatkan lokasi</p>
+            </div>
+
+            <form id="absenForm" class="absen-form">
+              <div class="form-group">
+                <label>NIM:</label>
+                <input type="text" id="userId" required />
+              </div>
+              <div class="form-group">
+                <label>Dosen:</label>
+                <select id="dosenSelect">
+                  <option value="">Pilih Dosen</option>
+                </select>
+              </div>
+
+              <!-- Camera Section -->
+              <div class="camera-section" style="display: none">
+                <div class="camera-container">
+                  <video id="cameraVideo" autoplay style="display: none"></video>
+                  <canvas id="cameraCanvas" style="display: none"></canvas>
+                  <div id="photoPreview" class="photo-preview"></div>
+                </div>
+                <div class="camera-controls">
+                  <button
+                    type="button"
+                    class="btn btn-warning"
+                    onclick="takePhoto()"
+                    id="takePhotoBtn"
+                    disabled
+                  >
+                    Ambil Foto
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="retakePhoto()"
+                    id="retakeBtn"
+                    style="display: none"
+                  >
+                    Foto Ulang
+                  </button>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-primary" onclick="checkLocationAndCamera()">
+                📍 Cek Lokasi
+              </button>
+              <button type="submit" class="btn btn-success" id="submitAbsen" disabled>
+                Absen Sekarang
+              </button>
+            </form>
+            <div id="absenResult" class="result"></div>
+          </div>
+
+          <!-- Admin Panel Tab -->
+          <div id="admin" class="tab-content">
+            <h3>🔐 Admin Panel</h3>
+
+            <!-- Stats -->
+            <div class="stats">
+              <div class="stat-card">
+                <div class="stat-number" id="totalUsers">0</div>
+                <div class="stat-label">Total Users</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="totalDosen">0</div>
+                <div class="stat-label">Total Dosen</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number" id="totalMahasiswa">0</div>
+                <div class="stat-label">Total Mahasiswa</div>
+              </div>
+            </div>
+
+            <!-- Admin Tabs -->
+            <div class="admin-tabs">
+              <button class="admin-tab active" onclick="showAdminTab('registerUser')">
+                Daftar User
+              </button>
+              <button class="admin-tab" onclick="showAdminTab('manageUsers')">Kelola User</button>
+            </div>
+
+            <!-- Register User -->
+            <div id="adminRegisterUser" class="admin-tab-content active">
+              <h4>📝 Daftarkan User Baru</h4>
+              <form id="adminRegisterForm" class="admin-form">
+                <div class="form-group">
+                  <label>Nama:</label>
+                  <input type="text" id="adminRegName" required />
+                </div>
+                <div class="form-group">
+                  <label id="adminRegEmailLabel">NIM/NIP:</label>
+                  <input type="text" id="adminRegEmail" required />
+                </div>
+                <div class="form-group">
+                  <label>Password:</label>
+                  <input type="password" id="adminRegPassword" required />
+                </div>
+                <div class="form-group">
+                  <label>Role:</label>
+                  <select id="adminRegRole" onchange="toggleAdminLocationFields()">
+                    <option value="mahasiswa">Mahasiswa</option>
+                    <option value="dosen">Dosen</option>
+                  </select>
+                </div>
+                <div id="adminLocationFields" class="location-fields" style="display: none">
+                  <div class="info-box">
+                    <h5>ℹ️ Info Dosen</h5>
+                    <p>
+                      <small
+                        >Lokasi akan diatur oleh dosen sendiri setelah login (radius validasi: 5
+                        meter). Admin hanya perlu mendaftarkan akun dosen.</small
+                      >
+                    </p>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Daftarkan User</button>
+              </form>
+              <div id="adminRegisterResult" class="result"></div>
+            </div>
+
+            <!-- Manage Users -->
+            <div id="adminManageUsers" class="admin-tab-content">
+              <h4>👥 Kelola User</h4>
+              <button class="btn btn-secondary" onclick="loadAllUsersAdmin()">Refresh Data</button>
+              <div id="adminUsersList" class="users-list"></div>
+            </div>
+          </div>
+
+
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

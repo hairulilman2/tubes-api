@@ -1,0 +1,201 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "Attendance System",
+  "dateExported": "2025-10-20T20:40:00.000Z",
+  "version": "1.1",
+  "folders": [
+    {
+      "id": "auth-folder",
+      "name": "Authentication",
+      "containerId": "",
+      "created": "2025-10-20T20:40:00.000Z",
+      "sortNum": 10000
+    },
+    {
+      "id": "users-folder", 
+      "name": "Users Management",
+      "containerId": "",
+      "created": "2025-10-20T20:40:00.000Z",
+      "sortNum": 20000
+    },
+    {
+      "id": "attendance-folder",
+      "name": "Attendance Management", 
+      "containerId": "",
+      "created": "2025-10-20T20:40:00.000Z",
+      "sortNum": 30000
+    }
+  ],
+  "requests": [
+    {
+      "id": "1",
+      "name": "1. Register Dosen",
+      "url": "http://localhost:3333/api/auth/register",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Dr. Ahmad Dosen\",\n  \"email\": \"ahmad@univ.ac.id\",\n  \"password\": \"password123\",\n  \"role\": \"dosen\",\n  \"latitude\": -6.2088,\n  \"longitude\": 106.8456\n}",
+        "form": []
+      },
+      "containerId": "auth-folder"
+    },
+    {
+      "id": "2", 
+      "name": "2. Register Mahasiswa",
+      "url": "http://localhost:3333/api/auth/register",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Budi Mahasiswa\",\n  \"email\": \"budi@student.ac.id\",\n  \"password\": \"password123\",\n  \"role\": \"mahasiswa\"\n}",
+        "form": []
+      },
+      "containerId": "auth-folder"
+    },
+    {
+      "id": "3",
+      "name": "3. Login Dosen", 
+      "url": "http://localhost:3333/api/auth/login",
+      "method": "POST",
+      "sortNum": 30000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"ahmad@univ.ac.id\",\n  \"password\": \"password123\"\n}",
+        "form": []
+      },
+      "containerId": "auth-folder"
+    },
+    {
+      "id": "4",
+      "name": "4. Login Mahasiswa",
+      "url": "http://localhost:3333/api/auth/login", 
+      "method": "POST",
+      "sortNum": 40000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"budi@student.ac.id\",\n  \"password\": \"password123\"\n}",
+        "form": []
+      },
+      "containerId": "auth-folder"
+    },
+    {
+      "id": "5",
+      "name": "5. Get All Users",
+      "url": "http://localhost:3333/api/users",
+      "method": "GET", 
+      "sortNum": 50000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [],
+      "containerId": "users-folder"
+    },
+    {
+      "id": "6",
+      "name": "6. Get Dosen List",
+      "url": "http://localhost:3333/api/users/dosen",
+      "method": "GET",
+      "sortNum": 60000,
+      "created": "2025-10-20T20:40:00.000Z", 
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [],
+      "containerId": "users-folder"
+    },
+    {
+      "id": "7",
+      "name": "7. Absen Dekat (Hadir)",
+      "url": "http://localhost:3333/api/attendances",
+      "method": "POST",
+      "sortNum": 70000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"userId\": 2,\n  \"dosenId\": 1,\n  \"latitude\": -6.2089,\n  \"longitude\": 106.8457\n}",
+        "form": []
+      },
+      "containerId": "attendance-folder"
+    },
+    {
+      "id": "8",
+      "name": "8. Absen Jauh (Tidak Hadir)",
+      "url": "http://localhost:3333/api/attendances",
+      "method": "POST",
+      "sortNum": 80000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z", 
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"userId\": 2,\n  \"dosenId\": 1,\n  \"latitude\": -6.2100,\n  \"longitude\": 106.8500\n}",
+        "form": []
+      },
+      "containerId": "attendance-folder"
+    },
+    {
+      "id": "9",
+      "name": "9. Get All Attendances",
+      "url": "http://localhost:3333/api/attendances",
+      "method": "GET",
+      "sortNum": 90000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [],
+      "containerId": "attendance-folder"
+    },
+    {
+      "id": "10",
+      "name": "0. Test Server",
+      "url": "http://localhost:3333/",
+      "method": "GET",
+      "sortNum": 5000,
+      "created": "2025-10-20T20:40:00.000Z",
+      "modified": "2025-10-20T20:40:00.000Z",
+      "headers": [],
+      "containerId": ""
+    }
+  ]
+}
