@@ -521,18 +521,3 @@ body.login-mode {
 .camera-controls .btn {
     margin: 5px;
 }
-
-/* Responsive */
-@media (max-width: 768px) {
-    .tabs {
-        flex-direction: column;
-    }
-    
-    .stats {
-        grid-template-columns: 1fr;
-    }
-    
-    .admin-tabs {
-        flex-direction: column;
-    }
-}

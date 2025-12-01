@@ -37,7 +37,7 @@ document.getElementById('loginForm').addEventListener('submit', async function (
       } else {
         // Verify role matches for non-admin users
         if (result.user.role !== selectedRole) {
-          showResult('loginResult', `Role tidak sesuai! Anda adalah ${result.user.role}`, 'error')
+          showResult('loginResult', `Role tidak sesuai! Anda login sebagai ${selectedRole} tapi akun Anda adalah ${result.user.role}. Silakan pilih role yang benar.`, 'error')
           return
         }
       }
@@ -59,7 +59,11 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 
       showResult('loginResult', 'Login berhasil!', 'success')
     } else {
-      showResult('loginResult', result.message, 'error')
+      let errorMessage = result.message
+      if (result.message === 'Invalid credentials') {
+        errorMessage = 'Username atau password salah! Pastikan Anda memasukkan NIM/NIP dan password yang benar.'
+      }
+      showResult('loginResult', errorMessage, 'error')
     }
   } catch (error) {
     showResult('loginResult', 'Error: ' + error.message, 'error')
@@ -68,51 +72,25 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 
 // Setup UI based on user role
 function setupUIForRole(role) {
-  const absenTab = document.getElementById('absenTab')
+  const absenPetaTab = document.getElementById('absenPetaTab')
   const adminTab = document.getElementById('adminTab')
+  const dosenTab = document.getElementById('dosenTab')
 
   // Hide all tabs first
-  absenTab.style.display = 'none'
+  absenPetaTab.style.display = 'none'
   adminTab.style.display = 'none'
+  dosenTab.style.display = 'none'
 
   switch (role) {
     case 'mahasiswa':
-      absenTab.style.display = 'block'
-      absenTab.click()
-      loadDosen()
+      absenPetaTab.style.display = 'block'
+      absenPetaTab.click()
       break
 
     case 'dosen':
-      // Show dosen panel
-      const dosenPanel = document.createElement('div')
-      dosenPanel.innerHTML = `
-                <div class="tab-content active" id="dosenPanel">
-                    <h3>👨‍🏫 Panel Dosen</h3>
-                    <div class="dosen-controls">
-                        <h4>📍 Set Lokasi Ruang Kelas</h4>
-                        <div class="form-group">
-                            <label>Latitude:</label>
-                            <input type="number" step="any" id="dosenLat" placeholder="Contoh: -0.8917">
-                        </div>
-                        <div class="form-group">
-                            <label>Longitude:</label>
-                            <input type="number" step="any" id="dosenLng" placeholder="Contoh: 119.8707">
-                        </div>
-                        <button class="btn btn-info" onclick="getDosenLocation()">📍 Ambil Lokasi Saat Ini</button>
-                        <button class="btn btn-primary" onclick="saveDosenLocation()">💾 Simpan Lokasi</button>
-                        <div id="locationResult" class="result"></div>
-                        <h4>🕐 Session Absensi</h4>
-                        <button class="btn btn-success" onclick="startAttendanceSession()">🕐 Mulai Session Absensi (15 menit)</button>
-                        <div id="sessionStatus" class="session-status"></div>
-                        
-                        <h4>📋 Data Absensi Mahasiswa</h4>
-                        <button class="btn btn-secondary" onclick="loadDosenAttendances()">🔄 Muat Data Absensi</button>
-                        <div id="dosenAttendancesList" class="attendances-list"></div>
-                    </div>
-                </div>
-            `
-      document.querySelector('.content').appendChild(dosenPanel)
-      // Load attendances for this dosen
+      dosenTab.style.display = 'block'
+      dosenTab.click()
+      setupDosenInfo()
       loadDosenAttendances()
       break
 
@@ -271,22 +249,23 @@ async function loadStats() {
   }
 }
 
-// Load dosen list for mahasiswa
-async function loadDosen() {
-  try {
-    const response = await fetch(`${API_BASE}/users/dosen`)
-    const dosen = await response.json()
-
-    const select = document.getElementById('dosenSelect')
-    select.innerHTML = '<option value="">Pilih Dosen</option>'
-
-    dosen.forEach((d) => {
-      select.innerHTML += `<option value="${d.id}">${d.name} (${d.email})</option>`
-    })
-  } catch (error) {
-    console.error('Error loading dosen:', error)
+// Setup dosen info
+function setupDosenInfo() {
+  if (currentUser && currentUser.role === 'dosen') {
+    document.getElementById('dosenName').textContent = currentUser.name || 'Tidak tersedia'
+    document.getElementById('dosenNIP').textContent = currentUser.email || 'Tidak tersedia'
+    
+    // Event listener untuk mata kuliah dosen
+    const dosenMatkul = document.getElementById('dosenMatkul')
+    if (dosenMatkul) {
+      dosenMatkul.addEventListener('change', function() {
+        console.log('Mata kuliah dosen dipilih:', this.value)
+      })
+    }
   }
 }
+
+
 
 
 
@@ -305,57 +284,7 @@ function logout() {
   showResult('loginResult', 'Logout berhasil!', 'success')
 }
 
-// Check location and camera for attendance
-function checkLocationAndCamera() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(async function (position) {
-      currentLat = position.coords.latitude
-      currentLng = position.coords.longitude
-      document.getElementById('currentLocation').innerHTML =
-        `Lat: ${currentLat.toFixed(6)}, Lng: ${currentLng.toFixed(6)}`
 
-      // Check distance to dosen before enabling button
-      await validateLocationDistance()
-    })
-  } else {
-    showResult('absenResult', 'Geolocation tidak didukung browser', 'error')
-  }
-}
-
-// Validate distance to dosen location
-async function validateLocationDistance() {
-  const dosenId = document.getElementById('dosenSelect').value
-  if (!dosenId) {
-    showResult('absenResult', 'Pilih dosen terlebih dahulu!', 'error')
-    return
-  }
-  
-  try {
-    const response = await fetch(`${API_BASE}/users`)
-    const users = await response.json()
-    const dosen = users.find(u => u.id === dosenId)
-    
-    if (!dosen || !dosen.latitude || !dosen.longitude) {
-      showResult('absenResult', 'Lokasi dosen belum diset!', 'error')
-      document.getElementById('submitAbsen').disabled = true
-      return
-    }
-    
-    const distance = calculateDistance(currentLat, currentLng, dosen.latitude, dosen.longitude)
-    const maxDistance = 5 // meters
-    
-    if (distance <= maxDistance) {
-      document.getElementById('submitAbsen').disabled = false
-      showResult('absenResult', `Lokasi valid! Jarak: ${Math.round(distance)}m. Anda bisa absen sekarang.`, 'success')
-    } else {
-      document.getElementById('submitAbsen').disabled = true
-      showResult('absenResult', `Anda terlalu jauh! Jarak: ${Math.round(distance)}m. Mendekatlah ke dosen (max 5m).`, 'error')
-    }
-  } catch (error) {
-    showResult('absenResult', 'Error validasi lokasi: ' + error.message, 'error')
-    document.getElementById('submitAbsen').disabled = true
-  }
-}
 
 // Calculate distance between two coordinates
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -373,67 +302,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c
 }
 
-// Attendance form
-document.getElementById('absenForm').addEventListener('submit', async function (e) {
-  e.preventDefault()
 
-  if (isProcessingAbsen) return
-
-  if (!currentLat || !currentLng) {
-    showResult('absenResult', 'Ambil lokasi terlebih dahulu!', 'error')
-    return
-  }
-  
-  // Auto open camera if no photo taken
-  if (!capturedPhoto) {
-    showResult('absenResult', 'Membuka kamera untuk mengambil foto...', 'success')
-    document.querySelector('.camera-section').style.display = 'block'
-    await startCamera()
-    showResult('absenResult', 'Silakan ambil foto terlebih dahulu!', 'warning')
-    return
-  }
-  
-  isProcessingAbsen = true
-
-  const data = {
-    userId: document.getElementById('userId').value,
-    dosenId: document.getElementById('dosenSelect').value,
-    latitude: currentLat,
-    longitude: currentLng,
-    photo: capturedPhoto
-  }
-
-  try {
-    // Check session status first
-    await checkSessionBeforeAttendance(data.dosenId)
-
-    const response = await fetch(`${API_BASE}/attendances`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-
-    const result = await response.json()
-
-    if (response.ok) {
-      let statusClass = 'error'
-      if (result.status === 'hadir') statusClass = 'success'
-      else if (result.status === 'terlambat') statusClass = 'warning'
-
-      showResult(
-        'absenResult',
-        `Absen berhasil! Status: ${result.status.toUpperCase()} (Jarak: ${result.distance}m)`,
-        statusClass
-      )
-    } else {
-      showResult('absenResult', result.message, 'error')
-    }
-  } catch (error) {
-    showResult('absenResult', 'Error: ' + error.message, 'error')
-  } finally {
-    isProcessingAbsen = false
-  }
-})
 
 let currentLat = null
 let currentLng = null
@@ -772,6 +641,94 @@ async function loadDosenAttendances() {
   }
 }
 
+// Open edit user modal
+function openEditModal(userId, userName, userEmail, userRole) {
+  document.getElementById('editUserId').value = userId
+  document.getElementById('editUserName').value = userName
+  document.getElementById('editUserEmail').value = userEmail
+  document.getElementById('editUserRole').value = userRole
+  document.getElementById('editUserPassword').value = ''
+  document.getElementById('editUserModal').style.display = 'block'
+}
+
+// Close edit user modal
+function closeEditModal() {
+  document.getElementById('editUserModal').style.display = 'none'
+  document.getElementById('editUserResult').innerHTML = ''
+}
+
+// Close modal when clicking outside or pressing Escape
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('editUserModal')
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeEditModal()
+      }
+    })
+  }
+  
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal && modal.style.display === 'block') {
+      closeEditModal()
+    }
+  })
+})
+
+// Edit user form handler
+document.addEventListener('DOMContentLoaded', function() {
+  const editForm = document.getElementById('editUserForm')
+  if (editForm) {
+    editForm.addEventListener('submit', async function(e) {
+      e.preventDefault()
+      
+      if (currentUser.role !== 'admin') {
+        showResult('editUserResult', 'Akses ditolak! Hanya admin yang bisa mengedit user.', 'error')
+        return
+      }
+      
+      const userId = document.getElementById('editUserId').value
+      const data = {
+        name: document.getElementById('editUserName').value,
+        email: document.getElementById('editUserEmail').value,
+        role: document.getElementById('editUserRole').value
+      }
+      
+      const newPassword = document.getElementById('editUserPassword').value
+      if (newPassword) {
+        data.password = newPassword
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(data)
+        })
+        
+        const result = await response.json()
+        
+        if (response.ok) {
+          showResult('editUserResult', 'User berhasil diperbarui!', 'success')
+          setTimeout(() => {
+            closeEditModal()
+            loadAllUsersAdmin()
+            loadStats()
+          }, 1500)
+        } else {
+          showResult('editUserResult', result.message || 'Gagal memperbarui user', 'error')
+        }
+      } catch (error) {
+        showResult('editUserResult', 'Error: ' + error.message, 'error')
+      }
+    })
+  }
+})
+
 // Load all users for admin
 async function loadAllUsersAdmin() {
   if (currentUser.role !== 'admin') return
@@ -794,6 +751,8 @@ async function loadAllUsersAdmin() {
         nimNipDisplay = `NIP: ${user.nip}<br>`
       }
 
+      const editButton = `<button class="btn btn-warning btn-sm" onclick="openEditModal('${user.id}', '${user.name}', '${user.email}', '${user.role}')" style="margin-right: 5px;">✏️ Edit</button>`
+      
       const deleteButton =
         user.role !== 'admin'
           ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}', '${user.name}')">🗑️ Hapus</button>`
@@ -810,6 +769,7 @@ async function loadAllUsersAdmin() {
                         ${user.latitude ? `<br>Lokasi: ${user.latitude}, ${user.longitude}` : ''}
                     </div>
                     <div class="user-actions">
+                        ${editButton}
                         ${deleteButton}
                     </div>
                 </div>
