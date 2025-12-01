@@ -2,24 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import hash from '@adonisjs/core/services/hash'
 import mongoService from '#services/mongodb_service'
 import { ObjectId } from 'mongodb'
-// Define MongoUser interface locally to avoid import issues
-interface MongoUser {
-  _id?: any
-  id?: string
-  name: string
-  email: string
-  password: string
-  role: 'admin' | 'dosen' | 'mahasiswa'
-  nim?: string
-  nip?: string
-  latitude?: number
-  longitude?: number
-  sessionStart?: Date
-  sessionEnd?: Date
-  isSessionActive?: boolean
-  createdAt?: Date
-  updatedAt?: Date
-}
+import type { MongoUser } from '#types/mongodb'
 
 export default class MongoDBController {
   async register({ request, response }: HttpContext) {

@@ -6,10 +6,10 @@ const AdminController = () => import('#controllers/admin_controller')
 
 // ===== API STATUS & HEALTH CHECK =====
 router.get('/api', async ({ response }) => {
-  return response.json({ 
+  return response.json({
     message: 'UNTAD Absensi API is running',
     version: '1.0.0',
-    status: 'active'
+    status: 'active',
   })
 })
 
@@ -21,14 +21,10 @@ router.get('/test', async ({ response }) => {
 router.post('/api/auth/register', [MongoDBController, 'register'])
 router.post('/api/auth/login', [MongoDBController, 'login'])
 
-// ===== USER MANAGEMENT ROUTES =====
 router.get('/api/users', [MongoDBController, 'getUsers'])
 router.get('/api/users/dosen', [MongoDBController, 'getDosen'])
 router.put('/api/users/:id', [MongoDBController, 'updateUser'])
 router.delete('/api/users/:id', [MongoDBController, 'deleteUser'])
-
-// ===== ADMIN ROUTES =====
-// User registration by admin
 router.post('/api/admin/register-dosen', [AdminController, 'registerDosen'])
 router.post('/api/admin/register-mahasiswa', [AdminController, 'registerMahasiswa'])
 
@@ -56,14 +52,14 @@ router.get('/api/debug/users', [MongoDBController, 'debugUsers'])
 
 // ===== STATIC FILE ROUTES =====
 router.get('/', async ({ response }) => {
-  return response.json({ 
+  return response.json({
     message: 'UNTAD Absensi API Server',
     version: '1.0.0',
     endpoints: {
       web: '/web',
       api: '/api',
-      docs: 'Available endpoints listed in this response'
-    }
+      docs: 'Available endpoints listed in this response',
+    },
   })
 })
 

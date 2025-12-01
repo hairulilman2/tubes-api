@@ -1,6 +1,5 @@
 import { MongoClient, Db, Collection } from 'mongodb'
 import env from '#start/env'
-import type { MongoUser, MongoAttendance } from '#types/mongodb'
 
 class MongoDBService {
   private client: MongoClient | null = null
@@ -8,11 +7,21 @@ class MongoDBService {
 
   async connect(): Promise<void> {
     if (!this.client) {
-      const connectionString = env.get('MONGO_CONNECTION_STRING')
-      this.client = new MongoClient(connectionString)
-      await this.client.connect()
-      this.db = this.client.db('attendance_system')
-      console.log('✅ Connected to MongoDB Atlas')
+      try {
+        const connectionString = env.get('MONGO_CONNECTION_STRING')
+        if (!connectionString) {
+          throw new Error('MONGO_CONNECTION_STRING is not defined in environment variables')
+        }
+        this.client = new MongoClient(connectionString)
+        await this.client.connect()
+        this.db = this.client.db('attendance_system')
+        console.log('✅ Connected to MongoDB Atlas')
+      } catch (error) {
+        console.error('❌ Failed to connect to MongoDB:', error)
+        this.client = null
+        this.db = null
+        throw error
+      }
     }
   }
 
@@ -32,7 +41,8 @@ class MongoDBService {
     return this.db.collection(name)
   }
 
-  async insertOne(collection: string, document: any) {
+  async insertOne(collection: string, document: any): Promise<any> {
+    await this.connect()
     const coll = this.getCollection(collection)
     const result = await coll.insertOne({
       ...document,
@@ -42,19 +52,22 @@ class MongoDBService {
     return { ...document, _id: result.insertedId, id: result.insertedId.toString() }
   }
 
-  async find(collection: string, filter: any = {}): Promise<(MongoUser | MongoAttendance)[]> {
+  async find(collection: string, filter: any = {}): Promise<any[]> {
+    await this.connect()
     const coll = this.getCollection(collection)
     const results = await coll.find(filter).toArray()
-    return results.map((doc) => ({ ...doc, id: doc._id.toString() })) as any
+    return results.map((doc) => ({ ...doc, id: doc._id.toString() }))
   }
 
-  async findOne(collection: string, filter: any): Promise<MongoUser | MongoAttendance | null> {
+  async findOne(collection: string, filter: any): Promise<any | null> {
+    await this.connect()
     const coll = this.getCollection(collection)
     const result = await coll.findOne(filter)
-    return result ? ({ ...result, id: result._id.toString() } as any) : null
+    return result ? { ...result, id: result._id.toString() } : null
   }
 
-  async updateOne(collection: string, filter: any, update: any) {
+  async updateOne(collection: string, filter: any, update: any): Promise<void> {
+    await this.connect()
     const coll = this.getCollection(collection)
     await coll.updateOne(filter, {
       $set: {
@@ -64,7 +77,8 @@ class MongoDBService {
     })
   }
 
-  async deleteOne(collection: string, filter: any) {
+  async deleteOne(collection: string, filter: any): Promise<void> {
+    await this.connect()
     const coll = this.getCollection(collection)
     await coll.deleteOne(filter)
   }

@@ -16,7 +16,6 @@ export default class Handler extends ExceptionHandler {
     // Force JSON response for API routes
     if (ctx.request.url().startsWith('/api/')) {
       ctx.response.header('Content-Type', 'application/json')
-      
       /**
        * Self handle the validation exception
        */
@@ -24,7 +23,7 @@ export default class Handler extends ExceptionHandler {
         if (error.code === 'E_VALIDATION_ERROR') {
           return ctx.response.status(422).json({
             message: 'Validation failed',
-            errors: error
+            errors: error,
           })
         }
       }
@@ -32,10 +31,9 @@ export default class Handler extends ExceptionHandler {
       // Handle other errors as JSON for API routes
       const status = (error as any)?.status || 500
       const message = (error as any)?.message || 'Internal server error'
-      
       return ctx.response.status(status).json({
         message,
-        error: this.debug ? error : undefined
+        error: this.debug ? error : undefined,
       })
     }
 
