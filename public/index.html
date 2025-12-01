@@ -105,6 +105,50 @@
       .btn-danger:hover {
         background: #c82333;
       }
+      
+      /* Badge styling */
+      .badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+      
+      .badge-success {
+        background: #28a745;
+        color: white;
+      }
+      
+      .badge-warning {
+        background: #ffc107;
+        color: #212529;
+      }
+      
+      /* Zoom specific styling */
+      .meeting-item {
+        transition: all 0.3s;
+      }
+      
+      .meeting-item:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+      }
+      
+      .zoom-info {
+        border-left: 4px solid #2196F3;
+      }
+      
+      .active-meeting {
+        border-left: 4px solid #4CAF50;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+      }
     </style>
   </head>
   <body class="login-mode">
@@ -189,11 +233,17 @@
             <button class="tab" onclick="showTab('absenPeta')" id="absenPetaTab" style="display: none">
               Absensi
             </button>
+            <button class="tab" onclick="showTab('zoomMahasiswa')" id="zoomMahasiswaTab" style="display: none">
+              Join Zoom
+            </button>
             <button class="tab" onclick="showTab('admin')" id="adminTab" style="display: none">
               Admin Panel
             </button>
             <button class="tab" onclick="showTab('dosen')" id="dosenTab" style="display: none">
               Panel Dosen
+            </button>
+            <button class="tab" onclick="showTab('zoom')" id="zoomTab" style="display: none">
+              Zoom Meeting
             </button>
 
           </div>
@@ -267,6 +317,59 @@
                   <p><strong>Waktu:</strong> <span id="current-time"></span></p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Zoom Mahasiswa Tab -->
+          <div id="zoomMahasiswa" class="tab-content">
+            <h3>📹 Join Zoom Meeting</h3>
+            
+            <!-- Mahasiswa Info -->
+            <div class="mahasiswa-zoom-info" style="background: #e8f5e8; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <h4>👤 Info Mahasiswa</h4>
+              <p><strong>Nama:</strong> <span id="zoomMahasiswaName">Loading...</span></p>
+              <p><strong>NIM:</strong> <span id="zoomMahasiswaNIM">Loading...</span></p>
+              <p><strong>Status:</strong> <span id="zoomMahasiswaStatus">Belum join meeting</span></p>
+            </div>
+
+            <!-- Join Meeting -->
+            <div class="join-meeting" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <h4>🚀 Join Meeting</h4>
+              <div class="form-group">
+                <label>Meeting ID:</label>
+                <input type="text" id="joinMeetingId" placeholder="Masukkan Meeting ID (contoh: 282 899 2827)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0;" />
+              </div>
+              <div class="form-group">
+                <label>Password (jika ada):</label>
+                <input type="text" id="joinMeetingPassword" placeholder="Masukkan password meeting (opsional)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0;" />
+              </div>
+              <div class="form-group">
+                <label>Nama untuk ditampilkan:</label>
+                <input type="text" id="joinDisplayName" placeholder="Nama Anda di meeting" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0;" />
+              </div>
+              <button class="btn btn-primary" onclick="joinZoomMeeting()">🚀 Join Meeting</button>
+              <button class="btn btn-info" onclick="scanQRCode()" style="margin-left: 10px;">📱 Scan QR Code</button>
+              <div id="joinMeetingResult" class="result"></div>
+            </div>
+
+            <!-- Active Meeting Info -->
+            <div id="activeMeetingInfo" class="active-meeting-info" style="background: #d4edda; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: none;">
+              <h4>🟢 Meeting Aktif</h4>
+              <p><strong>Meeting ID:</strong> <span id="currentMeetingId"></span></p>
+              <p><strong>Nama:</strong> <span id="currentDisplayName"></span></p>
+              <p><strong>Status:</strong> <span id="currentMeetingStatus">Terhubung</span></p>
+              <p><strong>Durasi:</strong> <span id="meetingDuration">00:00</span></p>
+              <div style="margin-top: 15px;">
+                <button class="btn btn-warning" onclick="leaveMeeting()">🚪 Keluar Meeting</button>
+                <button class="btn btn-info" onclick="toggleMute()">🎤 Mute/Unmute</button>
+              </div>
+            </div>
+
+            <!-- Meeting History -->
+            <div class="meeting-history-mahasiswa" style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #dee2e6;">
+              <h4>📜 Riwayat Meeting Saya</h4>
+              <button class="btn btn-secondary" onclick="loadMahasiswaMeetingHistory()">🔄 Refresh Riwayat</button>
+              <div id="mahasiswaMeetingHistoryList" style="margin-top: 15px;"></div>
             </div>
           </div>
 
@@ -447,6 +550,97 @@
               <h4>📊 Daftar Absensi Mahasiswa</h4>
               <button class="btn btn-secondary" onclick="loadDosenAttendances()">🔄 Refresh Data</button>
               <div id="dosenAttendancesList" style="margin-top: 15px;"></div>
+            </div>
+          </div>
+
+          <!-- Zoom Meeting Tab -->
+          <div id="zoom" class="tab-content">
+            <h3>📹 Zoom Meeting & Auto Attendance</h3>
+            
+            <!-- Zoom Meeting Info -->
+            <div class="zoom-info" style="background: #e3f2fd; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <h4>📊 Info Meeting</h4>
+              <p><strong>Dosen:</strong> <span id="zoomDosenName">Loading...</span></p>
+              <p><strong>Mata Kuliah:</strong> <span id="zoomMatkul">Belum dipilih</span></p>
+              <p><strong>Status Meeting:</strong> <span id="zoomStatus">Tidak Aktif</span></p>
+            </div>
+
+            <!-- Create Meeting -->
+            <div class="create-meeting" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <div style="background: #fff3cd; padding: 15px; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                <strong>⚠️ PENTING - DEMO MODE</strong><br>
+                <small>Meeting ID yang di-generate otomatis <strong>TIDAK AKAN BEKERJA</strong> di Zoom sesungguhnya.</small><br><br>
+                <strong>🔑 Untuk Meeting Zoom yang Valid:</strong><br>
+                <small>1. Masukkan <strong>Personal Meeting ID (PMI)</strong> Zoom Anda di field di bawah</small><br>
+                <small>2. PMI bisa didapat dari: zoom.us → Profile → Personal Meeting ID</small><br>
+                <small>3. Contoh PMI yang valid: <code>282 899 2827</code> atau <code>2828992827</code></small>
+              </div>
+              <h4>🎆 Buat Meeting Baru</h4>
+              <div class="form-group">
+                <label>Judul Meeting:</label>
+                <input type="text" id="meetingTitle" placeholder="Contoh: Kuliah Pemrograman Web - Pertemuan 1" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0;" />
+              </div>
+              <div class="form-group">
+                <label>Mata Kuliah:</label>
+                <select id="zoomMeetingMatkul" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0;">
+                  <option value="">Pilih Mata Kuliah</option>
+                  <option value="Pemrograman Web">Pemrograman Web</option>
+                  <option value="Basis Data">Basis Data</option>
+                  <option value="Algoritma dan Struktur Data">Algoritma dan Struktur Data</option>
+                  <option value="Sistem Operasi">Sistem Operasi</option>
+                  <option value="Jaringan Komputer">Jaringan Komputer</option>
+                  <option value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Durasi (menit):</label>
+                <select id="meetingDuration" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0;">
+                  <option value="60">60 menit</option>
+                  <option value="90">90 menit</option>
+                  <option value="120">120 menit</option>
+                  <option value="150">150 menit</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label><strong>Personal Meeting ID (PMI) Zoom Anda:</strong></label>
+                <input type="text" id="personalMeetingId" placeholder="Masukkan PMI Zoom Anda (contoh: 282 899 2827) - WAJIB untuk meeting yang valid!" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin: 5px 0; border-color: #28a745;" />
+                <small style="color: #28a745; font-weight: bold;">✅ Hanya PMI Zoom Anda yang akan bekerja di aplikasi Zoom!</small><br>
+                <small style="color: #666;">Kosongkan hanya untuk demo/testing (tidak akan bekerja di Zoom)</small>
+              </div>
+              <button class="btn btn-primary" onclick="createZoomMeeting()">🚀 Buat Meeting</button>
+              <button class="btn btn-info" onclick="showZoomInstructions()" style="margin-left: 10px;">📝 Panduan Setup Zoom</button>
+              <button class="btn btn-secondary" onclick="fillExamplePMI()" style="margin-left: 10px;">📝 Contoh PMI</button>
+              <div id="createMeetingResult" class="result"></div>
+            </div>
+
+            <!-- Active Meeting -->
+            <div id="activeMeeting" class="active-meeting" style="background: #d4edda; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: none;">
+              <h4>🟢 Meeting Aktif</h4>
+              <div style="background: white; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #28a745;">
+                <p><strong>🎯 Meeting ID:</strong> <span id="activeMeetingId" style="font-size: 18px; font-weight: bold; color: #007bff;"></span></p>
+                <p><strong>🔗 Join URL:</strong> <a id="activeMeetingUrl" href="#" target="_blank" style="color: #28a745; text-decoration: underline;">Klik untuk join meeting</a></p>
+                <p><strong>🔑 Password:</strong> <span id="activeMeetingPassword" style="font-weight: bold; color: #dc3545;"></span></p>
+                <div style="background: #e3f2fd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                  <small><strong>📝 Cara Join Manual:</strong></small><br>
+                  <small>1. Buka aplikasi Zoom</small><br>
+                  <small>2. Klik "Join Meeting"</small><br>
+                  <small>3. Masukkan Meeting ID: <span id="manualMeetingId" style="font-weight: bold;"></span></small><br>
+                  <small>4. Masukkan Password jika diminta</small>
+                </div>
+              </div>
+              <p><strong>👥 Peserta:</strong> <span id="participantCount">0</span> orang</p>
+              <div style="margin-top: 15px;">
+                <button class="btn btn-info" onclick="refreshParticipants()">🔄 Refresh Peserta</button>
+                <button class="btn btn-warning" onclick="copyMeetingInfo()">📋 Copy Info</button>
+                <button class="btn btn-danger" onclick="endZoomMeeting()">⏹️ Akhiri Meeting</button>
+              </div>
+            </div>
+
+            <!-- Meeting History -->
+            <div class="meeting-history" style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #dee2e6;">
+              <h4>📜 Riwayat Meeting & Absensi</h4>
+              <button class="btn btn-secondary" onclick="loadMeetingHistory()">🔄 Refresh Riwayat</button>
+              <div id="meetingHistoryList" style="margin-top: 15px;"></div>
             </div>
           </div>
 
@@ -895,6 +1089,195 @@
             }
         });
 
+        // Zoom Meeting Functions
+        let currentMeetingId = null;
+        
+        // Create Zoom Meeting
+        async function createZoomMeeting() {
+            const title = document.getElementById('meetingTitle').value.trim();
+            const matkul = document.getElementById('zoomMeetingMatkul').value;
+            const duration = document.getElementById('meetingDuration').value;
+            const pmi = document.getElementById('personalMeetingId').value.trim();
+            
+            if (!title) {
+                alert('❌ Masukkan judul meeting!');
+                return;
+            }
+            
+            if (!matkul) {
+                alert('❌ Pilih mata kuliah!');
+                return;
+            }
+            
+            // Validasi PMI jika diisi (hapus spasi dan validasi)
+            if (pmi) {
+                const cleanPmi = pmi.replace(/\s+/g, ''); // Hapus semua spasi
+                if (cleanPmi.length < 9 || cleanPmi.length > 11 || !/^\d+$/.test(cleanPmi)) {
+                    alert('❌ Personal Meeting ID harus berupa 9-11 digit angka!\nContoh: 282 899 2827 atau 2828992827');
+                    return;
+                }
+                // Update pmi dengan format yang sudah dibersihkan
+                document.getElementById('personalMeetingId').value = cleanPmi;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/zoom/create-meeting`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: title,
+                        matakuliah: matkul,
+                        duration: parseInt(duration),
+                        dosenId: currentUser.id,
+                        pmi: pmi || null
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentMeetingId = result.meetingId;
+                    showActiveMeeting(result);
+                    showResult('createMeetingResult', 'Meeting berhasil dibuat!', 'success');
+                } else {
+                    showResult('createMeetingResult', result.message, 'error');
+                }
+            } catch (error) {
+                showResult('createMeetingResult', 'Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Show Active Meeting
+        function showActiveMeeting(meetingData) {
+            document.getElementById('activeMeetingId').textContent = meetingData.meetingId;
+            document.getElementById('manualMeetingId').textContent = meetingData.meetingId;
+            document.getElementById('activeMeetingUrl').href = meetingData.joinUrl;
+            document.getElementById('activeMeetingUrl').textContent = meetingData.joinUrl;
+            document.getElementById('activeMeetingPassword').textContent = meetingData.password || 'Tidak ada';
+            document.getElementById('activeMeeting').style.display = 'block';
+            document.getElementById('zoomStatus').textContent = 'Meeting Aktif';
+        }
+        
+        // Copy Meeting Info
+        function copyMeetingInfo() {
+            const meetingId = document.getElementById('activeMeetingId').textContent;
+            const password = document.getElementById('activeMeetingPassword').textContent;
+            const joinUrl = document.getElementById('activeMeetingUrl').href;
+            
+            const meetingInfo = `📹 ZOOM MEETING INFO\n\n🎯 Meeting ID: ${meetingId}\n🔗 Join URL: ${joinUrl}\n🔑 Password: ${password}\n\n📱 Cara Join:\n1. Buka aplikasi Zoom\n2. Klik "Join Meeting"\n3. Masukkan Meeting ID: ${meetingId}\n4. Masukkan Password jika diminta`;
+            
+            navigator.clipboard.writeText(meetingInfo).then(() => {
+                alert('✅ Info meeting berhasil disalin ke clipboard!');
+            }).catch(() => {
+                // Fallback untuk browser yang tidak support clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = meetingInfo;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('✅ Info meeting berhasil disalin!');
+            });
+        }
+        
+        // End Zoom Meeting
+        async function endZoomMeeting() {
+            if (!currentMeetingId) {
+                alert('❌ Tidak ada meeting aktif!');
+                return;
+            }
+            
+            const confirm = window.confirm('Akhiri meeting dan proses absensi otomatis?');
+            if (!confirm) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/zoom/end-meeting`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        meetingId: currentMeetingId,
+                        dosenId: currentUser.id
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('activeMeeting').style.display = 'none';
+                    document.getElementById('zoomStatus').textContent = 'Tidak Aktif';
+                    currentMeetingId = null;
+                    alert(`✅ Meeting berakhir!\n\nAbsensi otomatis: ${result.attendanceCount} mahasiswa`);
+                    loadMeetingHistory();
+                } else {
+                    alert('❌ Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+        
+        // Refresh Participants
+        async function refreshParticipants() {
+            if (!currentMeetingId) return;
+            
+            try {
+                // Simulasi refresh participants
+                const count = Math.floor(Math.random() * 30) + 5;
+                document.getElementById('participantCount').textContent = count;
+            } catch (error) {
+                console.error('Error refreshing participants:', error);
+            }
+        }
+        
+        // Load Meeting History
+        async function loadMeetingHistory() {
+            if (!currentUser || currentUser.role !== 'dosen') return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/zoom/meetings/${currentUser.id}`);
+                const meetings = await response.json();
+                
+                const historyList = document.getElementById('meetingHistoryList');
+                historyList.innerHTML = '<h5>📊 Riwayat Meeting:</h5>';
+                
+                if (meetings.length === 0) {
+                    historyList.innerHTML += '<p>Belum ada riwayat meeting.</p>';
+                    return;
+                }
+                
+                meetings.forEach(meeting => {
+                    const date = new Date(meeting.createdAt).toLocaleString('id-ID');
+                    historyList.innerHTML += `
+                        <div class="meeting-item" style="border: 1px solid #dee2e6; padding: 15px; margin: 10px 0; border-radius: 8px;">
+                            <strong>${meeting.title}</strong><br>
+                            <small>Mata Kuliah: ${meeting.matakuliah}</small><br>
+                            <small>Tanggal: ${date}</small><br>
+                            <small>Peserta: ${meeting.attendanceCount || 0} mahasiswa</small><br>
+                            <span class="badge ${meeting.status === 'ended' ? 'badge-success' : 'badge-warning'}">
+                                ${meeting.status === 'ended' ? 'Selesai' : 'Aktif'}
+                            </span>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading meeting history:', error);
+            }
+        }
+        
+        // Setup Zoom Info
+        function setupZoomInfo() {
+            if (currentUser && currentUser.role === 'dosen') {
+                document.getElementById('zoomDosenName').textContent = currentUser.name || 'Tidak tersedia';
+                
+                // Sync dengan mata kuliah dosen jika sudah dipilih
+                const dosenMatkul = document.getElementById('dosenMatkul');
+                if (dosenMatkul && dosenMatkul.value) {
+                    document.getElementById('zoomMatkul').textContent = dosenMatkul.value;
+                    document.getElementById('zoomMeetingMatkul').value = dosenMatkul.value;
+                }
+            }
+        }
+
         // Override showTab function untuk handle peta
         const originalShowTab = window.showTab;
         window.showTab = function(tabName) {
@@ -925,7 +1308,241 @@
                     initDosenMap();
                 }, 300);
             }
+            
+            // Setup Zoom info ketika tab zoom dibuka
+            if (tabName === 'zoom') {
+                console.log('Setting up Zoom tab');
+                setTimeout(() => {
+                    setupZoomInfo();
+                    loadMeetingHistory();
+                }, 300);
+            }
+            
+            // Setup Zoom mahasiswa ketika tab zoomMahasiswa dibuka
+            if (tabName === 'zoomMahasiswa') {
+                console.log('Setting up Zoom Mahasiswa tab');
+                setTimeout(() => {
+                    setupMahasiswaZoomInfo();
+                    loadMahasiswaMeetingHistory();
+                }, 300);
+            }
         };
+        
+        // Show Zoom Instructions
+        function showZoomInstructions() {
+            const instructions = `📹 CARA MENDAPATKAN PMI ZOOM\n\n🔴 LANGKAH-LANGKAH:\n\n1. 🌐 Buka browser, kunjungi: zoom.us\n\n2. 🔑 Klik "Sign In" dan login dengan akun Zoom Anda\n\n3. 👤 Klik "Profile" di menu atas\n\n4. 🎯 Cari "Personal Meeting ID (PMI)"\n   - Akan terlihat angka seperti: 282 899 2827\n   - Ini adalah PMI Anda\n\n5. 📋 Copy PMI tersebut\n\n6. 🔙 Kembali ke aplikasi ini\n\n7. 📝 Paste PMI di field "Personal Meeting ID"\n\n8. 🚀 Klik "Buat Meeting"\n\n✅ SEKARANG MEETING ID AKAN VALID!\n\n⚠️ PENTING:\n- Tanpa PMI = Meeting tidak akan bekerja\n- PMI harus dari akun Zoom Anda sendiri\n- Setiap orang punya PMI yang berbeda\n\n📞 Masih bingung? Tanya admin sistem.`;
+            
+            alert(instructions);
+        }
+        
+        // Fill Example PMI for testing
+        function fillExamplePMI() {
+            document.getElementById('personalMeetingId').value = '282 899 2827';
+            document.getElementById('meetingTitle').value = 'Test Meeting - ' + new Date().toLocaleTimeString('id-ID');
+            document.getElementById('zoomMeetingMatkul').value = 'Pemrograman Web';
+            alert('✅ Contoh PMI dan data meeting telah diisi!\n\nPMI: 282 899 2827\n\n⚠️ Catatan: Ini hanya contoh untuk testing UI.');
+        }
+        
+        // Mahasiswa Zoom Functions
+        let currentMeetingTimer = null;
+        let meetingStartTime = null;
+        
+        // Join Zoom Meeting (Mahasiswa)
+        function joinZoomMeeting() {
+            const meetingId = document.getElementById('joinMeetingId').value.trim();
+            const password = document.getElementById('joinMeetingPassword').value.trim();
+            const displayName = document.getElementById('joinDisplayName').value.trim();
+            
+            if (!meetingId) {
+                alert('❌ Masukkan Meeting ID!');
+                return;
+            }
+            
+            if (!displayName) {
+                alert('❌ Masukkan nama untuk ditampilkan!');
+                return;
+            }
+            
+            // Clean meeting ID (remove spaces)
+            const cleanMeetingId = meetingId.replace(/\s+/g, '');
+            
+            // Validate meeting ID format
+            if (cleanMeetingId.length < 9 || cleanMeetingId.length > 11 || !/^\d+$/.test(cleanMeetingId)) {
+                alert('❌ Meeting ID harus berupa 9-11 digit angka!\nContoh: 282 899 2827');
+                return;
+            }
+            
+            // Create Zoom URL
+            let zoomUrl = `https://zoom.us/j/${cleanMeetingId}`;
+            if (password) {
+                zoomUrl += `?pwd=${password}`;
+            }
+            
+            // Add display name parameter
+            const separator = password ? '&' : '?';
+            zoomUrl += `${separator}uname=${encodeURIComponent(displayName)}`;
+            
+            // Show active meeting info
+            showActiveMeetingInfo(cleanMeetingId, displayName);
+            
+            // Open Zoom
+            window.open(zoomUrl, '_blank');
+            
+            // Record attendance
+            recordMeetingAttendance(cleanMeetingId, displayName);
+            
+            showResult('joinMeetingResult', `✅ Membuka Zoom Meeting...\n\nMeeting ID: ${meetingId}\nNama: ${displayName}`, 'success');
+        }
+        
+        // Show Active Meeting Info
+        function showActiveMeetingInfo(meetingId, displayName) {
+            document.getElementById('currentMeetingId').textContent = meetingId;
+            document.getElementById('currentDisplayName').textContent = displayName;
+            document.getElementById('activeMeetingInfo').style.display = 'block';
+            document.getElementById('zoomMahasiswaStatus').textContent = 'Sedang dalam meeting';
+            
+            // Start timer
+            meetingStartTime = new Date();
+            startMeetingTimer();
+        }
+        
+        // Start Meeting Timer
+        function startMeetingTimer() {
+            if (currentMeetingTimer) {
+                clearInterval(currentMeetingTimer);
+            }
+            
+            currentMeetingTimer = setInterval(() => {
+                if (meetingStartTime) {
+                    const now = new Date();
+                    const duration = Math.floor((now - meetingStartTime) / 1000);
+                    const minutes = Math.floor(duration / 60);
+                    const seconds = duration % 60;
+                    
+                    document.getElementById('meetingDuration').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+        
+        // Leave Meeting
+        function leaveMeeting() {
+            const confirm = window.confirm('Keluar dari meeting?');
+            if (!confirm) return;
+            
+            document.getElementById('activeMeetingInfo').style.display = 'none';
+            document.getElementById('zoomMahasiswaStatus').textContent = 'Keluar dari meeting';
+            
+            if (currentMeetingTimer) {
+                clearInterval(currentMeetingTimer);
+                currentMeetingTimer = null;
+            }
+            
+            // Record leave time
+            recordMeetingLeave();
+            
+            alert('✅ Anda telah keluar dari meeting.');
+        }
+        
+        // Toggle Mute (Placeholder)
+        function toggleMute() {
+            alert('🎤 Fitur mute/unmute hanya tersedia di aplikasi Zoom.');
+        }
+        
+        // Scan QR Code (Placeholder)
+        function scanQRCode() {
+            alert('📱 Fitur scan QR code akan tersedia di versi mobile app.');
+        }
+        
+        // Record Meeting Attendance
+        async function recordMeetingAttendance(meetingId, displayName) {
+            try {
+                const attendanceData = {
+                    meetingId: meetingId,
+                    studentName: displayName,
+                    studentId: currentUser ? currentUser.id : null,
+                    joinTime: new Date().toISOString(),
+                    status: 'joined'
+                };
+                
+                // Simulate API call to record attendance
+                console.log('Recording attendance:', attendanceData);
+                
+                // In production, send to server:
+                // await fetch(`${API_BASE}/zoom/record-attendance`, {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify(attendanceData)
+                // });
+                
+            } catch (error) {
+                console.error('Error recording attendance:', error);
+            }
+        }
+        
+        // Record Meeting Leave
+        async function recordMeetingLeave() {
+            try {
+                const leaveData = {
+                    leaveTime: new Date().toISOString(),
+                    duration: meetingStartTime ? Math.floor((new Date() - meetingStartTime) / 1000) : 0
+                };
+                
+                console.log('Recording leave:', leaveData);
+                
+            } catch (error) {
+                console.error('Error recording leave:', error);
+            }
+        }
+        
+        // Load Mahasiswa Meeting History
+        function loadMahasiswaMeetingHistory() {
+            const historyList = document.getElementById('mahasiswaMeetingHistoryList');
+            
+            // Simulate meeting history
+            const sampleHistory = [
+                {
+                    meetingId: '282 899 2827',
+                    title: 'Kuliah Pemrograman Web',
+                    date: new Date(Date.now() - 86400000).toLocaleDateString('id-ID'),
+                    duration: '45 menit',
+                    status: 'Hadir'
+                },
+                {
+                    meetingId: '123 456 7890',
+                    title: 'Kuliah Basis Data',
+                    date: new Date(Date.now() - 172800000).toLocaleDateString('id-ID'),
+                    duration: '60 menit',
+                    status: 'Hadir'
+                }
+            ];
+            
+            historyList.innerHTML = '<h5>📊 Riwayat Meeting:</h5>';
+            
+            sampleHistory.forEach(meeting => {
+                const statusClass = meeting.status === 'Hadir' ? 'badge-success' : 'badge-warning';
+                historyList.innerHTML += `
+                    <div class="meeting-item" style="border: 1px solid #dee2e6; padding: 15px; margin: 10px 0; border-radius: 8px;">
+                        <strong>${meeting.title}</strong><br>
+                        <small>Meeting ID: ${meeting.meetingId}</small><br>
+                        <small>Tanggal: ${meeting.date}</small><br>
+                        <small>Durasi: ${meeting.duration}</small><br>
+                        <span class="badge ${statusClass}">${meeting.status}</span>
+                    </div>
+                `;
+            });
+        }
+        
+        // Setup Mahasiswa Zoom Info
+        function setupMahasiswaZoomInfo() {
+            if (currentUser && currentUser.role === 'mahasiswa') {
+                document.getElementById('zoomMahasiswaName').textContent = currentUser.name || 'Tidak tersedia';
+                document.getElementById('zoomMahasiswaNIM').textContent = currentUser.email || 'Tidak tersedia';
+                
+                // Auto-fill display name
+                document.getElementById('joinDisplayName').value = currentUser.name || '';
+            }
+        }
         
         // Tambahkan event listener untuk tab absenPeta
         document.addEventListener('DOMContentLoaded', function() {

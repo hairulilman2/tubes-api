@@ -35,6 +35,14 @@ router.post('/api/attendances', [MongoDBController, 'createAttendance'])
 router.post('/api/attendances/start-session', [MongoDBController, 'startAttendanceSession'])
 router.get('/api/attendances/session/:dosenId', [MongoDBController, 'checkSessionStatus'])
 
+// Zoom Integration Routes
+router.post('/api/zoom/webhook', [MongoDBController, 'handleZoomWebhook'])
+router.post('/api/zoom/create-meeting', [MongoDBController, 'createZoomMeeting'])
+router.get('/api/zoom/meetings/:dosenId', [MongoDBController, 'getZoomMeetings'])
+router.post('/api/zoom/end-meeting', [MongoDBController, 'endZoomMeeting'])
+router.post('/api/zoom/record-attendance', [MongoDBController, 'recordZoomAttendance'])
+router.get('/api/zoom/attendance/:studentId', [MongoDBController, 'getStudentZoomAttendance'])
+
 router.get('/', async ({ response }) => {
   return response.json({ message: 'UNTAD Absensi API Server', version: '1.0.0' })
 })

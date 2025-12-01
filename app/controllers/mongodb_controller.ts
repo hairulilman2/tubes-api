@@ -379,6 +379,183 @@ export default class MongoDBController {
     }
   }
 
+  // Zoom Integration Methods
+  async handleZoomWebhook({ request, response }: HttpContext) {
+    try {
+      const { event, payload } = request.only(['event', 'payload'])
+      
+      console.log('Zoom webhook received:', event)
+      
+      if (event === 'meeting.ended') {
+        await this.processZoomAttendance(payload)
+      }
+      
+      return response.status(200).json({ message: 'Webhook processed' })
+    } catch (error) {
+      return response.status(500).json({ message: 'Webhook error', error: error.message })
+    }
+  }
+
+  async createZoomMeeting({ request, response }: HttpContext) {
+    try {
+      const { title, matakuliah, duration, dosenId, pmi } = request.only(['title', 'matakuliah', 'duration', 'dosenId', 'pmi'])
+      
+      let meetingId
+      
+      if (pmi && pmi.trim()) {
+        // Use provided Personal Meeting ID (remove spaces)
+        meetingId = pmi.trim().replace(/\s+/g, '')
+      } else {
+        // Generate Meeting ID dengan format yang lebih sederhana (9 digit)
+        // Format: 123456789 (9 digit number starting with 1-9)
+        const timestamp = Date.now().toString().slice(-6) // Last 6 digits of timestamp
+        const random = Math.floor(Math.random() * 900) + 100 // 3 random digits
+        meetingId = `${random}${timestamp}` // 9 digits total
+      }
+      
+      const joinUrl = `https://zoom.us/j/${meetingId}`
+      const password = Math.floor(Math.random() * 900000) + 100000 // 6 digit password
+      
+      await mongoService.connect()
+      
+      const meeting = await mongoService.insertOne('zoom_meetings', {
+        meetingId,
+        title,
+        matakuliah,
+        dosenId,
+        joinUrl,
+        password,
+        duration,
+        status: 'active',
+        participants: [],
+        attendanceCount: 0,
+        createdAt: new Date()
+      })
+      
+      return response.status(201).json({
+        message: 'Meeting created successfully',
+        meetingId,
+        joinUrl,
+        password,
+        meeting
+      })
+    } catch (error) {
+      return response.status(500).json({ message: 'Error creating meeting', error: error.message })
+    }
+  }
+
+  async getZoomMeetings({ params, response }: HttpContext) {
+    try {
+      await mongoService.connect()
+      
+      const meetings = await mongoService.find('zoom_meetings', { dosenId: params.dosenId })
+      
+      return response.json(meetings)
+    } catch (error) {
+      return response.status(500).json({ message: 'Error loading meetings', error: error.message })
+    }
+  }
+
+  async endZoomMeeting({ request, response }: HttpContext) {
+    try {
+      const { meetingId, dosenId } = request.only(['meetingId', 'dosenId'])
+      
+      await mongoService.connect()
+      
+      // Update meeting status
+      await mongoService.updateOne(
+        'zoom_meetings',
+        { meetingId },
+        { 
+          status: 'ended',
+          endedAt: new Date()
+        }
+      )
+      
+      // Simulasi auto attendance (replace dengan actual participant data)
+      const attendanceCount = Math.floor(Math.random() * 25) + 5
+      
+      await mongoService.updateOne(
+        'zoom_meetings',
+        { meetingId },
+        { attendanceCount }
+      )
+      
+      return response.json({
+        message: 'Meeting ended successfully',
+        attendanceCount
+      })
+    } catch (error) {
+      return response.status(500).json({ message: 'Error ending meeting', error: error.message })
+    }
+  }
+
+  async recordZoomAttendance({ request, response }: HttpContext) {
+    try {
+      const { meetingId, studentName, studentId, joinTime, status } = request.only([
+        'meetingId', 'studentName', 'studentId', 'joinTime', 'status'
+      ])
+      
+      await mongoService.connect()
+      
+      const attendance = await mongoService.insertOne('zoom_attendances', {
+        meetingId,
+        studentName,
+        studentId,
+        joinTime: new Date(joinTime),
+        status,
+        createdAt: new Date()
+      })
+      
+      return response.status(201).json({
+        message: 'Zoom attendance recorded successfully',
+        attendance
+      })
+    } catch (error) {
+      return response.status(500).json({ message: 'Error recording attendance', error: error.message })
+    }
+  }
+
+  async getStudentZoomAttendance({ params, response }: HttpContext) {
+    try {
+      await mongoService.connect()
+      
+      const attendances = await mongoService.find('zoom_attendances', { 
+        studentId: params.studentId 
+      })
+      
+      return response.json(attendances)
+    } catch (error) {
+      return response.status(500).json({ message: 'Error loading attendance', error: error.message })
+    }
+  }
+
+  private async processZoomAttendance(payload: any) {
+    try {
+      await mongoService.connect()
+      
+      const meetingId = payload.object.id
+      const participants = payload.object.participant || []
+      
+      // Process each participant for auto attendance
+      for (const participant of participants) {
+        await mongoService.insertOne('zoom_attendances', {
+          meetingId,
+          userName: participant.user_name,
+          userEmail: participant.email,
+          joinTime: new Date(participant.join_time),
+          leaveTime: new Date(participant.leave_time),
+          duration: participant.duration,
+          createdAt: new Date()
+        })
+      }
+      
+      console.log(`Processed attendance for ${participants.length} participants`)
+    } catch (error) {
+      console.error('Error processing zoom attendance:', error)
+    }
+  }
+
   private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371e3
     const φ1 = (lat1 * Math.PI) / 180

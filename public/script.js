@@ -73,22 +73,28 @@ document.getElementById('loginForm').addEventListener('submit', async function (
 // Setup UI based on user role
 function setupUIForRole(role) {
   const absenPetaTab = document.getElementById('absenPetaTab')
+  const zoomMahasiswaTab = document.getElementById('zoomMahasiswaTab')
   const adminTab = document.getElementById('adminTab')
   const dosenTab = document.getElementById('dosenTab')
+  const zoomTab = document.getElementById('zoomTab')
 
   // Hide all tabs first
   absenPetaTab.style.display = 'none'
+  zoomMahasiswaTab.style.display = 'none'
   adminTab.style.display = 'none'
   dosenTab.style.display = 'none'
+  zoomTab.style.display = 'none'
 
   switch (role) {
     case 'mahasiswa':
       absenPetaTab.style.display = 'block'
+      zoomMahasiswaTab.style.display = 'block'
       absenPetaTab.click()
       break
 
     case 'dosen':
       dosenTab.style.display = 'block'
+      zoomTab.style.display = 'block'
       dosenTab.click()
       setupDosenInfo()
       loadDosenAttendances()
