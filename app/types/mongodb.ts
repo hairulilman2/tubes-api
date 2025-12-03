@@ -9,6 +9,7 @@ export interface MongoUser {
   role: 'admin' | 'dosen' | 'mahasiswa'
   nim?: string
   nip?: string
+  kelas?: string
   latitude?: number
   longitude?: number
   sessionStart?: Date

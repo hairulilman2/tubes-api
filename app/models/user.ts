@@ -25,6 +25,9 @@ export default class User extends BaseModel {
   declare nip: string | null
 
   @column()
+  declare kelas: string | null
+
+  @column()
   declare latitude: number | null
 
   @column()

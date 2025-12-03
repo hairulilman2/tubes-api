@@ -9,7 +9,7 @@ export default class MongoDBController {
     try {
       await mongoService.connect()
 
-      const { name, email, password, role, latitude, longitude, nim, nip } = request.only([
+      const { name, email, password, role, latitude, longitude, nim, nip, kelas } = request.only([
         'name',
         'email',
         'password',
@@ -18,6 +18,7 @@ export default class MongoDBController {
         'longitude',
         'nim',
         'nip',
+        'kelas',
       ])
 
       // Validate required fields
@@ -46,6 +47,7 @@ export default class MongoDBController {
         role,
         nim: role === 'mahasiswa' ? nimNip : null,
         nip: role === 'dosen' ? nimNip : null,
+        kelas: kelas || null,
         latitude: role === 'dosen' ? latitude : null,
         longitude: role === 'dosen' ? longitude : null,
         sessionStart: null,
@@ -119,6 +121,7 @@ export default class MongoDBController {
           name: u.name,
           email: u.email,
           role: u.role,
+          kelas: u.kelas,
           latitude: u.latitude,
           longitude: u.longitude,
         }))
@@ -138,6 +141,7 @@ export default class MongoDBController {
           name: u.name,
           email: u.email,
           role: u.role,
+          kelas: u.kelas,
           latitude: u.latitude,
           longitude: u.longitude,
         }))
@@ -220,6 +224,43 @@ export default class MongoDBController {
       await mongoService.connect()
       const attendances = await mongoService.find('attendances')
       return response.json(attendances)
+    } catch (error) {
+      return response.status(500).json({ message: 'Database error', error: error.message })
+    }
+  }
+
+  async updateAttendance({ params, request, response }: HttpContext) {
+    try {
+      await mongoService.connect()
+      const { name, nim, status } = request.only(['name', 'nim', 'status'])
+      const attendance = await mongoService.findOne('attendances', {
+        _id: new ObjectId(params.id),
+      })
+      if (!attendance) {
+        return response.status(404).json({ message: 'Attendance not found' })
+      }
+      await mongoService.updateOne(
+        'attendances',
+        { _id: new ObjectId(params.id) },
+        { name, nim, status, updatedAt: new Date() }
+      )
+      return response.json({ message: 'Attendance updated successfully' })
+    } catch (error) {
+      return response.status(500).json({ message: 'Database error', error: error.message })
+    }
+  }
+
+  async deleteAttendance({ params, response }: HttpContext) {
+    try {
+      await mongoService.connect()
+      const attendance = await mongoService.findOne('attendances', {
+        _id: new ObjectId(params.id),
+      })
+      if (!attendance) {
+        return response.status(404).json({ message: 'Attendance not found' })
+      }
+      await mongoService.deleteOne('attendances', { _id: new ObjectId(params.id) })
+      return response.json({ message: 'Attendance deleted successfully' })
     } catch (error) {
       return response.status(500).json({ message: 'Database error', error: error.message })
     }
@@ -383,13 +424,10 @@ export default class MongoDBController {
   async handleZoomWebhook({ request, response }: HttpContext) {
     try {
       const { event, payload } = request.only(['event', 'payload'])
-      
       console.log('Zoom webhook received:', event)
-      
       if (event === 'meeting.ended') {
         await this.processZoomAttendance(payload)
       }
-      
       return response.status(200).json({ message: 'Webhook processed' })
     } catch (error) {
       return response.status(500).json({ message: 'Webhook error', error: error.message })
@@ -398,9 +436,8 @@ export default class MongoDBController {
 
   async createZoomMeeting({ request, response }: HttpContext) {
     try {
-      const { title, matakuliah, duration, dosenId, pmi } = request.only(['title', 'matakuliah', 'duration', 'dosenId', 'pmi'])
-      
-      let meetingId
+      const { title, matakuliah, kelas, duration, dosenId, pmi } = request.only(['title', 'matakuliah', 'kelas', 'duration', 'dosenId', 'pmi']),
+      let meetingId 
       
       if (pmi && pmi.trim()) {
         // Use provided Personal Meeting ID (remove spaces)
@@ -422,6 +459,7 @@ export default class MongoDBController {
         meetingId,
         title,
         matakuliah,
+        kelas,
         dosenId,
         joinUrl,
         password,

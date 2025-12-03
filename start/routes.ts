@@ -32,6 +32,8 @@ router.delete('/api/users/:id', [MongoDBController, 'deleteUser'])
 
 router.get('/api/attendances', [MongoDBController, 'getAttendances'])
 router.post('/api/attendances', [MongoDBController, 'createAttendance'])
+router.put('/api/attendances/:id', [MongoDBController, 'updateAttendance'])
+router.delete('/api/attendances/:id', [MongoDBController, 'deleteAttendance'])
 router.post('/api/attendances/start-session', [MongoDBController, 'startAttendanceSession'])
 router.get('/api/attendances/session/:dosenId', [MongoDBController, 'checkSessionStatus'])
 

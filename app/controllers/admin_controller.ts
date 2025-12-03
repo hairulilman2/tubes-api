@@ -12,6 +12,7 @@ interface MongoUser {
   role: 'admin' | 'dosen' | 'mahasiswa'
   nim?: string
   nip?: string
+  kelas?: string
   latitude?: number
   longitude?: number
   sessionStart?: Date
@@ -192,9 +193,12 @@ export default class AdminController {
         return response.status(404).json({ message: 'User not found' })
       }
 
-      const { name, email, latitude, longitude } = request.only([
+      const { name, email, role, kelas, password, latitude, longitude } = request.only([
         'name',
         'email',
+        'role',
+        'kelas',
+        'password',
         'latitude',
         'longitude',
       ])
@@ -210,6 +214,9 @@ export default class AdminController {
       const updateData: any = {}
       if (name) updateData.name = name
       if (email) updateData.email = email
+      if (role) updateData.role = role
+      if (kelas !== undefined) updateData.kelas = kelas
+      if (password) updateData.password = await hash.make(password)
       if (latitude !== undefined) updateData.latitude = latitude
       if (longitude !== undefined) updateData.longitude = longitude
 

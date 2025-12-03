@@ -14,7 +14,6 @@ export default defineConfig({
     apiSecret: process.env.ZOOM_API_SECRET || 'your_zoom_api_secret',
     baseUrl: 'https://api.zoom.us/v2',
     webhookSecret: process.env.ZOOM_WEBHOOK_SECRET || 'your_webhook_secret',
-    
     // Default meeting settings
     defaultSettings: {
       host_video: true,
@@ -23,6 +22,6 @@ export default defineConfig({
       mute_upon_entry: true,
       waiting_room: false,
       auto_recording: 'cloud', // 'local', 'cloud', or 'none'
-    }
-  }
+    },
+  },
 })
